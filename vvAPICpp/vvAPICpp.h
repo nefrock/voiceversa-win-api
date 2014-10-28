@@ -16,6 +16,7 @@ struct SipConfigStruct
 	int listenPort;
 	bool noUDP;
 	bool noTCP;
+	bool useTLS;
 	char stunAddress[255];
 	bool publishEnabled;
 	int expires;

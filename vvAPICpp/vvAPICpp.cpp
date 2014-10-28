@@ -1139,11 +1139,13 @@ PJSIPDLL_DLL_API int dll_init()
 		// Set EC tail length in ms
 		app_config.media_cfg.ec_tail_len = sipek_config.ECTail;
 
-		app_config.cfg.use_srtp = PJMEDIA_SRTP_MANDATORY;
-		app_config.cfg.srtp_secure_signaling = 1;
+		if (sipek_config.useTLS) {
+			app_config.cfg.use_srtp = PJMEDIA_SRTP_MANDATORY;
+			app_config.cfg.srtp_secure_signaling = 1;
+		}
 
 #ifdef PJSIP_HAS_TLS_TRANSPORT
-		app_config.use_tls = PJ_TRUE; //(sipek_config.useTLS == true ? PJ_TRUE : PJ_FALSE);
+		app_config.use_tls = (sipek_config.useTLS == true ? PJ_TRUE : PJ_FALSE);
 		if (app_config.use_tls == PJ_TRUE)
 		{
 			//app_config->udp_cfg.tls_setting.ca_list_file = pj_str("");

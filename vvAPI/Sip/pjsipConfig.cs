@@ -51,6 +51,8 @@ namespace Sipek.Sip
     public bool noUDP = false;
     [MarshalAs(UnmanagedType.I1)]
     public bool noTCP = true;
+    [MarshalAs(UnmanagedType.I1)]
+    public bool useTLS = false;
     [MarshalAs(UnmanagedType.ByValTStr,SizeConst=255)]
     public string stunServer;
     [MarshalAs(UnmanagedType.I1)]
