@@ -1971,6 +1971,32 @@ int dll_setSoundDevice(char* playbackDeviceName, char* recordingDeviceName)
 	return status;	
 }
 
+int dll_setSoundDeviceToDefault()
+{
+	pj_status_t status;
+	status = pjsua_set_snd_dev(PJMEDIA_AUD_DEFAULT_CAPTURE_DEV, PJMEDIA_AUD_DEFAULT_PLAYBACK_DEV);
+
+	return status;
+}
+
+int dll_refreshAudioDeviceList()
+{
+	pj_status_t status;
+	
+	// Close connection to all devices, refresh, then set it again.
+	// Force to set to default devices, since the result of pjsua_get_snd_dev()
+	// is no longer trustable after calling pjmedia_aud_dev_refresh().
+
+	pjsua_set_no_snd_dev();
+
+	status = pjmedia_aud_dev_refresh();
+	if (status != PJ_SUCCESS) { return status; }
+
+	status = pjsua_set_snd_dev(PJMEDIA_AUD_DEFAULT_CAPTURE_DEV, PJMEDIA_AUD_DEFAULT_PLAYBACK_DEV);
+
+	return status;
+}
+
 ///
 int dll_makeConference(int callId)
 {

@@ -97,6 +97,10 @@ namespace Sipek.Sip
     private static extern int dll_setCodecPriority(string name, int prio);
     [DllImport(PJSIP_DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "dll_setSoundDevice")]
     private static extern int dll_setSoundDevice(string playbackDeviceName, string recordingDeviceName);
+    [DllImport(PJSIP_DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "dll_setSoundDeviceToDefault")]
+    private static extern int dll_setSoundDeviceToDefault();
+    [DllImport(PJSIP_DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "dll_refreshAudioDeviceList")]
+    private static extern int dll_refreshAudioDeviceList();
 
     #endregion Wrapper functions
 
@@ -234,7 +238,6 @@ namespace Sipek.Sip
       return new pjsipCallProxy(Config);
     }
 
-
     /// <summary>
     /// Set sound device for playback and recording
     /// </summary>
@@ -244,6 +247,22 @@ namespace Sipek.Sip
     {
       int status = dll_setSoundDevice(playbackDeviceName, recordingDeviceName);
       return status;
+    }
+
+    /// <summary>
+    /// Set sound device to default device.
+    /// </summary>
+    public int setSoundDeviceToDefault() {
+        int status = dll_setSoundDeviceToDefault();
+        return status;
+    }
+
+    /// <summary>
+    /// Refresh audio device list.
+    /// </summary>
+    public int refreshAudioDeviceList() {
+        int status = dll_refreshAudioDeviceList();
+        return status;
     }
 
 
