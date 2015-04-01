@@ -1928,12 +1928,10 @@ int dll_getCurrentCodec(pjsua_call_id call_id, char* codec)
 
 int dll_setSoundDevice(char* playbackDeviceName, char* recordingDeviceName)
 {
-	int capture_dev;
-	int playback_dev;
-	//unsigned int counti;
+	int capture_dev = -1;
+	int playback_dev = -1;
 	const pjmedia_snd_dev_info *info;
-	int cnt = -1;
-
+	int name_len;
 
     int i, count;
     
@@ -1944,16 +1942,18 @@ int dll_setSoundDevice(char* playbackDeviceName, char* recordingDeviceName)
 
     for (i=0; i<count; ++i) {
 		info = pjmedia_snd_get_dev_info(i);
-
+		name_len = strlen(info->name);
 		PJ_LOG(1,(THIS_FILE, "Device %d, %s (capture=%d, playback=%d)",i, info->name, info->input_count, info->output_count));
 
 		// check names
-		if ((info->input_count > 0)&&( pj_strcmp2(&pj_str(recordingDeviceName), info->name)== 0 ))
+		// compare the first "name_len" characters since info->name does not necessarily hold full length of
+		// device name.
+		if ((info->input_count > 0) && (pj_strncmp2(&pj_str(recordingDeviceName), info->name, name_len) == 0))
 		{
 			// device found
 			capture_dev	= i;
 		}
-		else if ((info->output_count > 0)&&( pj_strcmp2(&pj_str(playbackDeviceName), info->name)== 0 ))
+		else if ((info->output_count > 0) && (pj_strncmp2(&pj_str(playbackDeviceName), info->name, name_len) == 0))
 		{
 			// device found
 			playback_dev	= i;
@@ -1961,6 +1961,10 @@ int dll_setSoundDevice(char* playbackDeviceName, char* recordingDeviceName)
 
 		pj_assert(info != NULL);
     }
+
+	if (capture_dev == -1 || playback_dev == -1) {
+		return -1;
+	}
 
 	pj_status_t status = pjsua_set_snd_dev(capture_dev, playback_dev);
 
