@@ -239,7 +239,7 @@ namespace Sipek.Sip
     /// Set sound device for playback and recording
     /// </summary>
     /// <param name="playbackDeviceName"></param>
-    /// /// <param name="recordingDeviceName"></param>
+    /// <param name="recordingDeviceName"></param>
     public int setSoundDevice(string playbackDeviceName, string recordingDeviceName)
     {
       int status = dll_setSoundDevice(playbackDeviceName, recordingDeviceName);
