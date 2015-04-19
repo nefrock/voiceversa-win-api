@@ -1305,6 +1305,10 @@ PJSIPDLL_DLL_API int dll_init()
 		if (status != PJ_SUCCESS)
 			goto on_error;
 
+		status = pjsua_conf_adjust_rx_level(app_config.ringback_slot, 0.15f);
+		if (status != PJ_SUCCESS)
+			goto on_error;
+
 		/* Ring (to alert incoming call) */
 		name = pj_str("ring");
 		status = pjmedia_tonegen_create2(app_config.pool, &name, 
@@ -1332,6 +1336,9 @@ PJSIPDLL_DLL_API int dll_init()
 		if (status != PJ_SUCCESS)
 			goto on_error;
 
+		status = pjsua_conf_adjust_rx_level(app_config.ring_slot, 0.15f);
+		if (status != PJ_SUCCESS)
+			goto on_error;
     }
 
     pj_memcpy(&tcp_cfg, &app_config.udp_cfg, sizeof(tcp_cfg));
