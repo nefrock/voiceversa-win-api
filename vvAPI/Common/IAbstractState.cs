@@ -181,6 +181,21 @@ namespace Sipek.Common
     {
       return true;
     }
+
+    public override bool adjustRxVolume(float val)
+    {
+        return true;
+    }
+
+    public override bool adjustTxVolume(float val)
+    {
+        return true;
+    }
+
+    public override string getCallDump() {
+        return "";
+    }
+
     public override bool xferCall(string number)
     {
       return true;
@@ -220,6 +235,10 @@ namespace Sipek.Common
     public override bool sendCallMessage(string message)
     {
       return CallProxy.sendCallMessage(message);
+    }
+
+    public override bool sendInfo(string content) {
+        return CallProxy.sendInfo(content);
     }
 
     #endregion Methods

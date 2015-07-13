@@ -56,6 +56,10 @@ enum ETransportMode {
 static SipConfigStruct sipek_config;
 static bool sipekConfigEnabled = false;
 
+// volume adjustments
+static float _rx_volume = 1.0f;
+static float _tx_volume = 1.0f;
+
 ////////////////////////////////////////////////////////////////////////
 // Presence structs 
 
@@ -227,7 +231,7 @@ static void default_config(struct app_config *cfg)
     unsigned i;
 
 	pjsua_config_default(&cfg->cfg);
-	pj_ansi_sprintf(tmp, "Sipek on PJSUA v%s", pj_get_version());
+	pj_ansi_sprintf(tmp, "VoiceVersa on PJSUA v%s", pj_get_version());
 	pj_strdup2_with_null(app_config.pool, &cfg->cfg.user_agent, tmp);
 
 	pjsua_logging_config_default(&cfg->log_cfg);
@@ -311,16 +315,17 @@ static void log_call_dump(int call_id) {
     part_idx = 0;
     part_len = PJ_LOG_MAX_SIZE-80;
     while (part_idx < call_dump_len) {
-	char p_orig, *p;
+		char p_orig, *p;
 
-	p = &some_buf[part_idx];
-	if (part_idx + part_len > call_dump_len)
-	    part_len = call_dump_len - part_idx;
-	p_orig = p[part_len];
-	p[part_len] = '\0';
-	PJ_LOG(3,(THIS_FILE, "%s", p));
-	p[part_len] = p_orig;
-	part_idx += part_len;
+		p = &some_buf[part_idx];
+		if (part_idx + part_len > call_dump_len) {
+			part_len = call_dump_len - part_idx;
+		}
+		p_orig = p[part_len];
+		p[part_len] = '\0';
+		PJ_LOG(3,(THIS_FILE, "%s", p));
+		p[part_len] = p_orig;
+		part_idx += part_len;
     }
     pj_log_set_decor(log_decor);
 }
@@ -771,6 +776,8 @@ static void on_call_audio_state(pjsua_call_info *ci, unsigned mi,
 		if (connect_sound) {
 			pjsua_conf_connect(call_conf_slot, 0);
 			pjsua_conf_connect(0, call_conf_slot);
+
+			pjsua_conf_adjust_rx_level(call_conf_slot, _rx_volume);
 
 			/* Automatically record conversation, if desired */
 			if (app_config.auto_rec && app_config.rec_port != PJSUA_INVALID_ID) {
@@ -1631,6 +1638,29 @@ int dll_retrieveCall(int callId)
     return 1;
 }
 
+int dll_adjustRxVolume(int callId, float vol) {
+	pjsua_call_info ci;
+
+	// pjsua_conf_adjust_rx_level has no effect when the conf_slot is
+	// not bridged to sound device yet.
+	// so we'll save the value, call it right now anyway,
+	// then call it once again when the conf_slot is actually bridged.
+	// the same for tx volume;
+	_rx_volume = vol;
+	pjsua_call_get_info(callId, &ci);
+	pjsua_conf_adjust_rx_level(ci.conf_slot, _rx_volume);
+	return 1;
+}
+
+int dll_adjustTxVolume(int callId, float vol) {
+	pjsua_call_info ci;
+
+	_tx_volume = vol;
+	pjsua_call_get_info(callId, &ci);
+	pjsua_conf_adjust_tx_level(ci.conf_slot, _tx_volume);
+	return 1;
+}
+
 int dll_xferCall(int callid, char* uri)
 {
 	pjsua_msg_data msg_data;
@@ -1749,6 +1779,20 @@ int dll_dialDtmf(int callId, char* digits, int mode)
 	return status;
 }
 
+int dll_getCallDump(int callId, char *dump, int buflen) {
+    /*pj_size_t part_len;
+    pj_size_t part_idx;*/
+	pj_status_t status;
+
+    status = pjsua_call_dump(callId, PJ_TRUE, dump, buflen, "");
+	if (status != PJ_SUCCESS) {
+		return -1;
+	}
+
+	dump[buflen - 1] = '\0';
+	return 1;
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////
 int dll_addBuddy(char* uri, bool subscribe)
 {
@@ -1835,20 +1879,12 @@ int dll_setStatus(int accId, int presence_state)
 int dll_sendInfo(int callid, char* content)
 {
 	pj_status_t status;
-	pj_str_t temp;
-
-	// allocate buffer
-	temp.slen = 255;
-	temp.ptr = (char*) pj_pool_alloc(app_config.pool, 255);
-
-	pj_strcpy(&temp, &pj_str("Signal="));
-	pj_strcat(&temp, &pj_str(content));
 
 	pjsua_msg_data msg_data;
 	pjsua_msg_data_init(&msg_data);  
 
 	msg_data.content_type = pj_str("application/dtmf-relay");
-	msg_data.msg_body = temp;
+	msg_data.msg_body = pj_str(content);
 	pj_str_t typeInfo = pj_str("INFO");
 	status = pjsua_call_send_request(callid, &typeInfo, &msg_data);
 
@@ -1932,7 +1968,7 @@ int dll_getCurrentCodec(pjsua_call_id call_id, char* codec)
 	return 0;
 }
 
-
+////////////////////////////////////////////////////////////////////////////////////////////////
 int dll_setSoundDevice(char* playbackDeviceName, char* recordingDeviceName)
 {
 	int capture_dev = -1;
@@ -2004,7 +2040,7 @@ int dll_refreshAudioDeviceList()
 	return status;
 }
 
-///
+////////////////////////////////////////////////////////////////////////////////////////////////
 int dll_makeConference(int callId)
 {
 	pjsua_call_info call_info;

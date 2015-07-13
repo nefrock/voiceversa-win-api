@@ -64,6 +64,12 @@ namespace Sipek.Sip
     private static extern int dll_holdCall(int callId);
     [DllImport(PJSIP_DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "dll_retrieveCall")]
     private static extern int dll_retrieveCall(int callId);
+    [DllImport(PJSIP_DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "dll_adjustRxVolume")]
+    private static extern int dll_adjustRxVolume(int callId, float vol);
+    [DllImport(PJSIP_DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "dll_getCallDump")]
+    private static extern int dll_getCallDump(int callId, StringBuilder outStr, int buflen);
+    [DllImport(PJSIP_DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "dll_adjustTxVolume")]
+    private static extern int dll_adjustTxVolume(int callId, float vol);
     [DllImport(PJSIP_DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "dll_xferCall")]
     private static extern int dll_xferCall(int callId, string uri);
     [DllImport(PJSIP_DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "dll_xferCallWithReplaces")]
@@ -78,6 +84,8 @@ namespace Sipek.Sip
     private static extern int dll_makeConference(int callId);
     [DllImport(PJSIP_DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "dll_sendCallMessage")]
     private static extern int dll_sendCallMessage(int callId, string message);
+    [DllImport(PJSIP_DLL, CallingConvention = CallingConvention.Cdecl, EntryPoint = "dll_sendInfo")]
+    private static extern int dll_sendInfo(int callid, string content);
 
     #endregion
 
@@ -228,6 +236,36 @@ namespace Sipek.Sip
     }
 
     /// <summary>
+    /// Adjust RX volume for a given session
+    /// </summary>
+    /// <param name="vol"></param>
+    /// <returns></returns>
+    public override bool adjustRxVolume(float vol) {
+        dll_adjustRxVolume(SessionId, vol);
+        return true;
+    }
+
+    /// <summary>
+    /// Adjust TX volume for a given session
+    /// </summary>
+    /// <param name="vol"></param>
+    /// <returns></returns>
+    public override bool adjustTxVolume(float vol) {
+        dll_adjustTxVolume(SessionId, vol);
+        return true;
+    }
+
+    /// <summary>
+    /// Get call dump string
+    /// </summary>
+    /// <returns></returns>
+    public override string getCallDump() {
+        StringBuilder str = new StringBuilder(1024 * 3); //see "some_buf" of vvAPICpp.cpp
+        int status = dll_getCallDump(SessionId, str, str.Capacity);
+        return (status == 1) ? str.ToString() : "";
+    }
+
+    /// <summary>
     /// Trasfer call to number
     /// </summary>
     /// <param name="sessionId"></param>
@@ -313,7 +351,7 @@ namespace Sipek.Sip
     }
 
     /// <summary>
-    /// 
+    /// Send message inside INVITE session
     /// </summary>
     /// <param name="message"></param>
     /// <returns></returns>
@@ -321,6 +359,16 @@ namespace Sipek.Sip
     {
       int status = dll_sendCallMessage(SessionId, message);
       return (status == 1)? true : false;
+    }
+
+      /// <summary>
+    /// Send INFO message
+    /// </summary>
+    /// <param name="content"></param>
+    /// <returns></returns>
+    public override bool sendInfo(string content) {
+        int status = dll_sendInfo(SessionId, content);
+        return (status == 1) ? true : false;
     }
 
     #endregion Methods

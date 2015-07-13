@@ -238,6 +238,24 @@ namespace Sipek.Common
     public abstract bool retrieveCall();
 
     /// <summary>
+    /// Request RX volume adjustment
+    /// </summary>
+    /// <returns></returns>
+    public abstract bool adjustRxVolume(float vol);
+
+    /// <summary>
+    /// Request TX volume adjustment
+    /// </summary>
+    /// <returns></returns>
+    public abstract bool adjustTxVolume(float vol);
+
+    /// <summary>
+    /// Get call dump string
+    /// </summary>
+    /// <returns></returns>
+    public abstract string getCallDump();
+
+    /// <summary>
     /// Tranfer call to a given number
     /// </summary>
     /// <param name="number">Number to transfer call to</param>
@@ -292,6 +310,12 @@ namespace Sipek.Common
     /// <returns></returns>
     public abstract bool sendCallMessage(string message);
 
+    /// <summary>
+    /// Send INFO message
+    /// </summary>
+    /// <returns></returns>
+    public abstract bool sendInfo(string content);
+
     #endregion
   }
 
@@ -340,6 +364,18 @@ namespace Sipek.Common
       return false;
     }
 
+    public override bool adjustRxVolume(float val) {
+        return false;
+    }
+
+    public override bool adjustTxVolume(float val) {
+        return false;
+    }
+
+    public override string getCallDump() {
+        return "";
+    }
+
     public override bool xferCall(string number)
     {
       return false;
@@ -383,6 +419,9 @@ namespace Sipek.Common
     public override bool sendCallMessage(string message)
     {
       return false;
+    }
+    public override bool sendInfo(string content) {
+        return false;
     }
     #endregion
   }
